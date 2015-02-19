@@ -128,14 +128,14 @@ static const uint16_t SHOWHIGH_BG_MGDL = 400;
 // GOOD : 5.0, 12.2 // BAD : 7 , 14.44
 static const uint16_t SPECVALUE_BG_MMOL = 11;
 static const uint16_t SHOWLOW_BG_MMOL = 22;
-static const uint16_t HYPOLOW_BG_MMOL = 30;
+static const uint16_t HYPOLOW_BG_MMOL = 31;
 static const uint16_t BIGLOW_BG_MMOL = 33;
-static const uint16_t MIDLOW_BG_MMOL = 39;
+static const uint16_t MIDLOW_BG_MMOL = 40;
 static const uint16_t LOW_BG_MMOL = 44;
 
 static const uint16_t HIGH_BG_MMOL = 100;
 static const uint16_t MIDHIGH_BG_MMOL = 133;
-static const uint16_t BIGHIGH_BG_MMOL = 166;
+static const uint16_t BIGHIGH_BG_MMOL = 150;
 static const uint16_t SHOWHIGH_BG_MMOL = 222;
 
 // BG Snooze Times, in Minutes; controls when vibrate again
@@ -586,7 +586,11 @@ static void draw_date_from_app() {
   
   // format current date from app
   if (strcmp(time_watch_text, "00:00") == 0) {
-    draw_return = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%l:%M", current_d_app);
+  	if(clock_is_24h_style() == true) {
+    		draw_return = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%H:%M", current_d_app);
+    	} else {
+    		draw_return = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%l:%M", current_d_app);
+    	}
 	if (draw_return != 0) {
       text_layer_set_text(time_watch_layer, time_watch_text);
 	}
@@ -1431,7 +1435,7 @@ static void load_cgmtime() {
     
     if (current_cgm_time == 0) {     
       // Init code or error code; set text layer & icon to empty value 
-      // APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CGM TIME AGO INIT OR ERROR CODE: %s", cgm_label_buffer);
+      //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD CGMTIME, CGM TIME AGO INIT OR ERROR CODE: %s", cgm_label_buffer);
       text_layer_set_text(cgmtime_layer, "");
       create_update_bitmap(&cgmicon_bitmap,cgmicon_layer,TIMEAGO_ICONS[NONE_TIMEAGO_ICON_INDX]);            
     }
@@ -1692,11 +1696,11 @@ static void load_bg_delta() {
 	// set delta BG message
 	
 	// zero here, means we have an error instead; set error message
-    if (converted_bgDelta == 0) {
-      strncpy(formatted_bg_delta, "BG DELTA ERR", BGDELTA_FORMATTED_SIZE);
-      text_layer_set_text(message_layer, formatted_bg_delta);
-      return;
-    }
+ //   if (converted_bgDelta == 0) {
+ //     strncpy(formatted_bg_delta, "BG DELTA ERR", BGDELTA_FORMATTED_SIZE);
+ //     text_layer_set_text(message_layer, formatted_bg_delta);
+ //     return;
+ //   }
   
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BG DELTA, DELTA STRING: %s", &current_bg_delta[i]);
     if (!currentBG_isMMOL) {
@@ -2003,7 +2007,11 @@ void handle_minute_tick_cgm(struct tm* tick_time_cgm, TimeUnits units_changed_cg
   
   if (units_changed_cgm & MINUTE_UNIT) {
     //APP_LOG(APP_LOG_LEVEL_INFO, "TICK TIME MINUTE CODE");
-    tick_return_cgm = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%l:%M", tick_time_cgm);
+	if(clock_is_24h_style() == true) {
+		    tick_return_cgm = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%H:%M", tick_time_cgm);	
+	} else {
+		tick_return_cgm = strftime(time_watch_text, TIME_TEXTBUFF_SIZE, "%l:%M", tick_time_cgm);
+	}
 	if (tick_return_cgm != 0) {
       text_layer_set_text(time_watch_layer, time_watch_text);
 	}
