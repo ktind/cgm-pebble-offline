@@ -133,10 +133,10 @@ static const uint16_t BIGLOW_BG_MMOL = 33;
 static const uint16_t MIDLOW_BG_MMOL = 40;
 static const uint16_t LOW_BG_MMOL = 44;
 
-static const uint16_t HIGH_BG_MMOL = 100;
-static const uint16_t MIDHIGH_BG_MMOL = 133;
+static const uint16_t HIGH_BG_MMOL = 120;
+static const uint16_t MIDHIGH_BG_MMOL = 135;
 static const uint16_t BIGHIGH_BG_MMOL = 150;
-static const uint16_t SHOWHIGH_BG_MMOL = 222;
+static const uint16_t SHOWHIGH_BG_MMOL = 220;
 
 // BG Snooze Times, in Minutes; controls when vibrate again
 // RANGE 0-240
@@ -1630,7 +1630,7 @@ static void load_bg_delta() {
 	
 	// check for CHECK CGM condition, if true set message
 	if ((CGMOffAlert) && (!TurnOff_CHECKCGM_Msg)) {
-	  text_layer_set_text(message_layer, "CHECK CGM");
+	  text_layer_set_text(message_layer, "CHK BRDGE");
     return;	
 	}
 	
@@ -1643,7 +1643,7 @@ static void load_bg_delta() {
 	
   	// check for NO ENDPOINT condition, if true set message
 	// put " " (space) in bg field so logo continues to show
-	if (strcmp(current_bg_delta, "NOEP") == 0) {
+/*	if (strcmp(current_bg_delta, "NOEP") == 0) {
       strncpy(formatted_bg_delta, "NO ENDPOINT", MSGLAYER_BUFFER_SIZE);
       text_layer_set_text(message_layer, formatted_bg_delta);
       text_layer_set_text(bg_layer, " ");
@@ -1659,7 +1659,7 @@ static void load_bg_delta() {
       text_layer_set_text(bg_layer, "");
       return;	
     }
-  
+*/  
   	// check if LOADING.., if true set message
 	// put " " (space) in bg field so logo continues to show
     if (strcmp(current_bg_delta, "LOAD") == 0) {
