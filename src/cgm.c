@@ -1706,7 +1706,7 @@ static void load_bg_delta() {
 		strncpy(delta_label_buffer, " mmol", BGDELTA_LABEL_SIZE);
 		strcat(formatted_bg_delta, delta_label_buffer);
 	}
-	if((currentBG_isMMOL && current_bg == 55) || (!currentBG_isMMOL && current_bg == 100)) {
+	if((currentBG_isMMOL && current_bg == 55) || (!currentBG_isMMOL && (current_bg == 100 || current_bg == 99))) {
 		text_layer_set_text(message_layer, "BAZINGA!");
 	} else {
 
