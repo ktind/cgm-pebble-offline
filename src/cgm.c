@@ -9,7 +9,8 @@ TextLayer *bg_layer = NULL;
 TextLayer *cgmtime_layer = NULL;
 TextLayer *message_layer = NULL;		// BG DELTA & MESSAGE LAYER
 TextLayer *battlevel_layer = NULL;
-TextLayer *t1dname_layer = NULL;
+TextLayer *watch_battlevel_layer = NULL;
+//TextLayer *t1dname_layer = NULL;
 TextLayer *time_watch_layer = NULL;
 TextLayer *time_app_layer = NULL;
 TextLayer *date_app_layer = NULL;
@@ -17,15 +18,11 @@ TextLayer *date_app_layer = NULL;
 BitmapLayer *icon_layer = NULL;
 BitmapLayer *cgmicon_layer = NULL;
 BitmapLayer *appicon_layer = NULL;
-BitmapLayer *batticon_layer = NULL;
 
 GBitmap *icon_bitmap = NULL;
 GBitmap *appicon_bitmap = NULL;
 GBitmap *cgmicon_bitmap = NULL;
 GBitmap *specialvalue_bitmap = NULL;
-GBitmap *batticon_bitmap = NULL;
-
-InverterLayer *inv_battlevel_layer = NULL;
 
 static char time_watch_text[] = "00:00";
 static char date_app_text[] = "Wed 13 Jan";
@@ -43,6 +40,9 @@ time_t time_now = 0;
 
 // global variable for bluetooth connection
 bool bluetooth_connected_cgm = true;
+
+// BATTERY LEVEL FORMATTED SIZE used for Bridge/Phone and Watch battery indications
+const uint8_t BATTLEVEL_FORMATTED_SIZE = 8;
 
 // global variables for sync tuple functions
 // buffers have to be static and hardcoded
@@ -111,14 +111,14 @@ static const uint8_t TIMEAGO_BUFFER_SIZE = 10;
 // BG Ranges, MG/DL
 static const uint16_t SPECVALUE_BG_MGDL = 20;
 static const uint16_t SHOWLOW_BG_MGDL = 40;
-static const uint16_t HYPOLOW_BG_MGDL = 55;
-static const uint16_t BIGLOW_BG_MGDL = 60;
+//static const uint16_t HYPOLOW_BG_MGDL = 55;
+//static const uint16_t BIGLOW_BG_MGDL = 60;
 //static const uint16_t MIDLOW_BG_MGDL = 70;
 //static const uint16_t LOW_BG_MGDL = 80;
 
 //static const uint16_t HIGH_BG_MGDL = 180;
 //static const uint16_t MIDHIGH_BG_MGDL = 240;
-static const uint16_t BIGHIGH_BG_MGDL = 300;
+//static const uint16_t BIGHIGH_BG_MGDL = 300;
 static const uint16_t SHOWHIGH_BG_MGDL = 400;
 
 // BG Ranges, MMOL
@@ -128,35 +128,35 @@ static const uint16_t SHOWHIGH_BG_MGDL = 400;
 // GOOD : 5.0, 12.2 // BAD : 7 , 14.44
 static const uint16_t SPECVALUE_BG_MMOL = 11;
 static const uint16_t SHOWLOW_BG_MMOL = 22;
-static const uint16_t HYPOLOW_BG_MMOL = 31;
-static const uint16_t BIGLOW_BG_MMOL = 33;
+//static const uint16_t HYPOLOW_BG_MMOL = 31;
+//static const uint16_t BIGLOW_BG_MMOL = 33;
 //static const uint16_t MIDLOW_BG_MMOL = 40;
 //static const uint16_t LOW_BG_MMOL = 44;
 
 //static const uint16_t HIGH_BG_MMOL = 120;
 //static const uint16_t MIDHIGH_BG_MMOL = 135;
-static const uint16_t BIGHIGH_BG_MMOL = 150;
+//static const uint16_t BIGHIGH_BG_MMOL = 150;
 static const uint16_t SHOWHIGH_BG_MMOL = 220;
 
 // BG Snooze Times, in Minutes; controls when vibrate again
 // RANGE 0-240
 static const uint8_t SPECVALUE_SNZ_MIN = 30;
-static const uint8_t HYPOLOW_SNZ_MIN = 5;
-static const uint8_t BIGLOW_SNZ_MIN = 5;
+//static const uint8_t HYPOLOW_SNZ_MIN = 5;
+//static const uint8_t BIGLOW_SNZ_MIN = 5;
 //static const uint8_t MIDLOW_SNZ_MIN = 10;
 //static const uint8_t LOW_SNZ_MIN = 15;
 //static const uint8_t HIGH_SNZ_MIN = 30;
 //static const uint8_t MIDHIGH_SNZ_MIN = 30;
-static const uint8_t BIGHIGH_SNZ_MIN = 30;
+//static const uint8_t BIGHIGH_SNZ_MIN = 30;
 	
 // Vibration Levels; 0 = NONE; 1 = LOW; 2 = MEDIUM; 3 = HIGH
 // IF YOU DO NOT WANT A SPECIFIC VIBRATION, SET TO 0
 static const uint8_t SPECVALUE_VIBE = 2;
-static const uint8_t HYPOLOWBG_VIBE = 3;
-static const uint8_t BIGLOWBG_VIBE = 3;
+//static const uint8_t HYPOLOWBG_VIBE = 3;
+//static const uint8_t BIGLOWBG_VIBE = 3;
 //static const uint8_t LOWBG_VIBE = 3;
 //static const uint8_t HIGHBG_VIBE = 2;
-static const uint8_t BIGHIGHBG_VIBE = 2;
+//static const uint8_t BIGHIGHBG_VIBE = 2;
 static const uint8_t DOUBLEDOWN_VIBE = 3;
 static const uint8_t APPSYNC_ERR_VIBE = 1;
 static const uint8_t APPMSG_INDROP_VIBE = 1;
@@ -170,7 +170,7 @@ static const uint8_t LOWBATTERY_VIBE = 1;
 // RANGE 0-240
 // IF YOU WANT TO WAIT LONGER TO GET CONDITION, INCREASE NUMBER
 static const uint8_t CGMOUT_WAIT_MIN = 15;
-static const uint8_t PHONEOUT_WAIT_MIN = 10;
+static const uint8_t PHONEOUT_WAIT_MIN = 3;
 
 // Control Messages
 // IF YOU DO NOT WANT A SPECIFIC MESSAGE, SET TO true
@@ -187,7 +187,7 @@ static const bool TurnOffStrongVibrations = false;
 // Bluetooth Timer Wait Time, in Seconds
 // RANGE 0-240
 // THIS IS ONLY FOR BAD BLUETOOTH CONNECTIONS
-// TRY EXTENDING THIS TIME TO SEE IF IT WIL HELP SMOOTH CONNECTION
+// TRY EXTENDING THIS TIME TO SEE IF IT WILL HELP SMOOTH CONNECTION
 // CGM DATA RECEIVED EVERY 60 SECONDS, GOING BEYOND THAT MAY RESULT IN MISSED DATA
 static const uint8_t BT_ALERT_WAIT_SECS = 45;
 
@@ -212,14 +212,14 @@ enum CgmKey {
 
 // ARRAY OF SPECIAL VALUE ICONS
 static const uint8_t SPECIAL_VALUE_ICONS[] = {
-	RESOURCE_ID_IMAGE_NONE,						 //0
-	RESOURCE_ID_IMAGE_BROKEN_ANTENNA,	 //1
-	RESOURCE_ID_IMAGE_BLOOD_DROP,			 //2
-	RESOURCE_ID_IMAGE_STOP_LIGHT,			 //3
-	RESOURCE_ID_IMAGE_HOURGLASS,				//4
-	RESOURCE_ID_IMAGE_QUESTION_MARKS,	 //5
-	RESOURCE_ID_IMAGE_LOGO,						 //6
-	RESOURCE_ID_IMAGE_ERR							 //7
+	RESOURCE_ID_IMAGE_NONE,			//0
+	RESOURCE_ID_IMAGE_BROKEN_ANTENNA,	//1
+	RESOURCE_ID_IMAGE_BLOOD_DROP,		//2
+	RESOURCE_ID_IMAGE_STOP_LIGHT,		//3
+	RESOURCE_ID_IMAGE_HOURGLASS,		//4
+	RESOURCE_ID_IMAGE_QUESTION_MARKS,	//5
+	RESOURCE_ID_IMAGE_LOGO,			//6
+	RESOURCE_ID_IMAGE_ERR			//7
 };
 	
 // INDEX FOR ARRAY OF SPECIAL VALUE ICONS
@@ -234,11 +234,11 @@ static const uint8_t ERR_SPECVALUE_ICON_INDX = 7;
 
 // ARRAY OF TIMEAGO ICONS
 static const uint8_t TIMEAGO_ICONS[] = {
-	RESOURCE_ID_IMAGE_NONE,			 //0
+	RESOURCE_ID_IMAGE_NONE,			//0
 	RESOURCE_ID_IMAGE_PHONEON,		//1
-	RESOURCE_ID_IMAGE_PHONEOFF,	 //2
-	RESOURCE_ID_IMAGE_RCVRON,		 //3
-	RESOURCE_ID_IMAGE_RCVROFF		 //4
+	RESOURCE_ID_IMAGE_PHONEOFF,	 	//2
+	RESOURCE_ID_IMAGE_RCVRON,		//3
+	RESOURCE_ID_IMAGE_RCVROFF		//4
 };
 
 // INDEX FOR ARRAY OF TIMEAGO ICONS
@@ -247,6 +247,8 @@ static const uint8_t PHONEON_ICON_INDX = 1;
 static const uint8_t PHONEOFF_ICON_INDX = 2;
 static const uint8_t RCVRON_ICON_INDX = 3;
 static const uint8_t RCVROFF_ICON_INDX = 4;
+
+
 
 static char *translate_app_error(AppMessageResult result) {
 	switch (result) {
@@ -375,20 +377,6 @@ static void destroy_null_TextLayer(TextLayer **txt_layer) {
 //APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL TEXT LAYER: EXIT CODE");
 } // end destroy_null_TextLayer
 
-static void destroy_null_InverterLayer(InverterLayer **inv_layer) {
-	//APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: ENTER CODE");
-	
-	if (*inv_layer != NULL) {
-		//APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: POINTER EXISTS, DESTROY INVERTER LAYER");
-			inverter_layer_destroy(*inv_layer);
-			if (*inv_layer != NULL) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: POINTER EXISTS, SET POINTER TO NULL");
-				*inv_layer = NULL;
-			}
-	}
-//APP_LOG(APP_LOG_LEVEL_INFO, "DESTROY NULL INVERTER LAYER: EXIT CODE");
-} // end destroy_null_InverterLayer
-
 static void create_update_bitmap(GBitmap **bmp_image, BitmapLayer *bmp_layer, const int resource_id) {
 	//APP_LOG(APP_LOG_LEVEL_INFO, " CREATE UPDATE BITMAP: ENTER CODE");
 	
@@ -411,6 +399,23 @@ static void create_update_bitmap(GBitmap **bmp_image, BitmapLayer *bmp_layer, co
 	}
 	//APP_LOG(APP_LOG_LEVEL_INFO, " CREATE UPDATE BITMAP: EXIT CODE");
 } // end create_update_bitmap
+
+
+static void battery_handler(BatteryChargeState charge_state) {
+
+	static char watch_battlevel_percent[7];
+	snprintf(watch_battlevel_percent, 7, "W:%i%%", charge_state.charge_percent);
+	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
+	if(charge_state.is_charging) {
+		text_layer_set_text_color(watch_battlevel_layer, GColorBlack);
+		text_layer_set_background_color(watch_battlevel_layer, GColorWhite);
+	} else {
+		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
+		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
+	}	
+
+
+}
 
 static void alert_handler_cgm(uint8_t alertValue) {
 	//APP_LOG(APP_LOG_LEVEL_INFO, "ALERT HANDLER");
@@ -931,44 +936,44 @@ static void load_bg() {
 	// ARRAY OF BG CONSTANTS; MGDL
 	uint16_t BG_MGDL[] = {
 		SPECVALUE_BG_MGDL,	//0
-		SHOWLOW_BG_MGDL,		//1
-		HYPOLOW_BG_MGDL,		//2
-		BIGLOW_BG_MGDL,		//3
+		SHOWLOW_BG_MGDL,	//1
+//		HYPOLOW_BG_MGDL,	//2
+//		BIGLOW_BG_MGDL,		//3
 //		MIDLOW_BG_MGDL,		//4
-//		LOW_BG_MGDL,			//5
-//		HIGH_BG_MGDL,			//6
-//		MIDHIGH_BG_MGDL,		//7
-		BIGHIGH_BG_MGDL,		//8
-		SHOWHIGH_BG_MGDL		//9
+//		LOW_BG_MGDL,		//5
+//		HIGH_BG_MGDL,		//6
+//		MIDHIGH_BG_MGDL,	//7
+//		BIGHIGH_BG_MGDL,	//8
+//		SHOWHIGH_BG_MGDL	//9
 	};
 	
 	// ARRAY OF BG CONSTANTS; MMOL
 	uint16_t BG_MMOL[] = {
 		SPECVALUE_BG_MMOL,	//0
-		SHOWLOW_BG_MMOL,		//1
-		HYPOLOW_BG_MMOL,		//2
-		BIGLOW_BG_MMOL,		//3
+		SHOWLOW_BG_MMOL,	//1
+//		HYPOLOW_BG_MMOL,	//2
+//		BIGLOW_BG_MMOL,		//3
 //		MIDLOW_BG_MMOL,		//4
-//		LOW_BG_MMOL,			//5
-//		HIGH_BG_MMOL,			//6
-//		MIDHIGH_BG_MMOL,		//7
-		BIGHIGH_BG_MMOL,		//8
-		SHOWHIGH_BG_MMOL		//9
+//		LOW_BG_MMOL,		//5
+//		HIGH_BG_MMOL,		//6
+//		MIDHIGH_BG_MMOL,	//7
+//		BIGHIGH_BG_MMOL,	//8
+//		SHOWHIGH_BG_MMOL	//9
 	};
 		
 	// INDEX FOR ARRAYS OF BG CONSTANTS
 	const uint8_t SPECVALUE_BG_INDX = 0;
 	const uint8_t SHOWLOW_BG_INDX = 1;
-	const uint8_t HYPOLOW_BG_INDX = 2;
-	const uint8_t BIGLOW_BG_INDX = 3;
+//	const uint8_t HYPOLOW_BG_INDX = 2;
+//	const uint8_t BIGLOW_BG_INDX = 3;
 //	const uint8_t MIDLOW_BG_INDX = 4;
 //	const uint8_t LOW_BG_INDX = 5;
 //	const uint8_t HIGH_BG_INDX = 6;
 //	const uint8_t MIDHIGH_BG_INDX = 7;
 //	const uint8_t BIGHIGH_BG_INDX = 8;
 //	const uint8_t SHOWHIGH_BG_INDX = 9;
-	const uint8_t BIGHIGH_BG_INDX = 4;
-	const uint8_t SHOWHIGH_BG_INDX = 5;
+//	const uint8_t BIGHIGH_BG_INDX = 4;
+	const uint8_t SHOWHIGH_BG_INDX = 2;
 	
 	// MG/DL SPECIAL VALUE CONSTANTS ACTUAL VALUES
 	// mg/dL = mmol / .0555 OR mg/dL = mmol * 18.0182
@@ -1189,7 +1194,7 @@ static void load_bg() {
 		} // else if SPECIAL VALUE BG
 			
 		// check for HYPO LOW BG and not SPECIAL VALUE
-		else if ( ( ((current_bg > bg_ptr[SPECVALUE_BG_INDX]) && (current_bg <= bg_ptr[HYPOLOW_BG_INDX])) 
+/*		else if ( ( ((current_bg > bg_ptr[SPECVALUE_BG_INDX]) && (current_bg <= bg_ptr[HYPOLOW_BG_INDX])) 
 					 && ((lastAlertTime == 0) || (lastAlertTime == HYPOLOW_SNZ_MIN)) ) 
 					 || ( ((current_bg > bg_ptr[SPECVALUE_BG_INDX]) && (current_bg <= bg_ptr[HYPOLOW_BG_INDX])) && (!hypolow_overwrite) ) ) {
 			
@@ -1251,7 +1256,7 @@ static void load_bg() {
 			} // else if BIG LOW BG
 	 
 			// check for MID LOW BG
-/*			else if ( ( ((current_bg > bg_ptr[BIGLOW_BG_INDX]) && (current_bg <= bg_ptr[MIDLOW_BG_INDX])) 
+			else if ( ( ((current_bg > bg_ptr[BIGLOW_BG_INDX]) && (current_bg <= bg_ptr[MIDLOW_BG_INDX])) 
 						 && ((lastAlertTime == 0) || (lastAlertTime == MIDLOW_SNZ_MIN)) ) 
 					 || ( ((current_bg > bg_ptr[BIGLOW_BG_INDX]) && (current_bg <= bg_ptr[MIDLOW_BG_INDX])) && (!midlow_overwrite) ) ) {
 			
@@ -1372,7 +1377,7 @@ static void load_bg() {
 			} // else if MID HIGH BG
 	*/
 			// check for BIG HIGH BG
-			else if ( ( (current_bg >= bg_ptr[BIGHIGH_BG_INDX]) 
+/*			else if ( ( (current_bg >= bg_ptr[BIGHIGH_BG_INDX]) 
 					 && ((lastAlertTime == 0) || (lastAlertTime == BIGHIGH_SNZ_MIN)) )
 					 || ((current_bg >= bg_ptr[BIGHIGH_BG_INDX]) && (!bighigh_overwrite)) ) {	 
 			
@@ -1401,7 +1406,7 @@ static void load_bg() {
 			} // else if BIG HIGH BG
 
 			// else "normal" range or init code
-/*			else if ( ((current_bg > bg_ptr[LOW_BG_INDX]) && (current_bg < bg_ptr[HIGH_BG_INDX])) 
+			else if ( ((current_bg > bg_ptr[LOW_BG_INDX]) && (current_bg < bg_ptr[HIGH_BG_INDX])) 
 							|| (current_bg <= 0) ) {
 			
 				// do nothing; just reset snooze counter
@@ -1639,26 +1644,8 @@ static void load_bg_delta() {
 		return;	
 	}
 	
-	// check for NO ENDPOINT condition, if true set message
-	// put " " (space) in bg field so logo continues to show
-/*	if (strcmp(current_bg_delta, "NOEP") == 0) {
-			strncpy(formatted_bg_delta, "NO ENDPOINT", MSGLAYER_BUFFER_SIZE);
-			text_layer_set_text(message_layer, formatted_bg_delta);
-			text_layer_set_text(bg_layer, " ");
-		create_update_bitmap(&icon_bitmap,icon_layer,SPECIAL_VALUE_ICONS[LOGO_SPECVALUE_ICON_INDX]);
-			specvalue_alert = false;
-			return;	
-	}
 
-		// check for DATA OFFLINE condition, if true set message to fix condition	
-		if (strcmp(current_bg_delta, "ERR") == 0) {
-			strncpy(formatted_bg_delta, "RSTRT PHONE", MSGLAYER_BUFFER_SIZE);
-			text_layer_set_text(message_layer, formatted_bg_delta);
-			text_layer_set_text(bg_layer, "");
-			return;	
-		}
-*/	
-		// check if LOADING.., if true set message
+	// check if LOADING.., if true set message
 	// put " " (space) in bg field so logo continues to show
 	if (strcmp(current_bg_delta, "LOAD") == 0) {
 		strncpy(formatted_bg_delta, "LOADING...", MSGLAYER_BUFFER_SIZE);
@@ -1692,13 +1679,6 @@ static void load_bg_delta() {
 	// Bluetooth is good, Phone is good, CGM connection is good, no special message 
 	// set delta BG message
 	
-	// zero here, means we have an error instead; set error message
- //	 if (converted_bgDelta == 0) {
- //		 strncpy(formatted_bg_delta, "BG DELTA ERR", BGDELTA_FORMATTED_SIZE);
- //		 text_layer_set_text(message_layer, formatted_bg_delta);
- //		 return;
- //	 }
-	
 	//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BG DELTA, DELTA STRING: %s", &current_bg_delta[i]);
 	if (!currentBG_isMMOL) {
 		// set mg/dL string
@@ -1726,8 +1706,12 @@ static void load_bg_delta() {
 		strncpy(delta_label_buffer, " mmol", BGDELTA_LABEL_SIZE);
 		strcat(formatted_bg_delta, delta_label_buffer);
 	}
-	
-	text_layer_set_text(message_layer, formatted_bg_delta);
+	if((currentBG_isMMOL && current_bg == 55) || (!currentBG_isMMOL && current_bg == 100)) {
+		text_layer_set_text(message_layer, "BAZINGA!");
+	} else {
+
+		text_layer_set_text(message_layer, formatted_bg_delta);
+	}
 	
 } // end load_bg_delta
 
@@ -1735,47 +1719,17 @@ static void load_battlevel() {
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, FUNCTION START");
 
 	// CONSTANTS
-	const uint8_t BATTLEVEL_FORMATTED_SIZE = 6;
 	
-	// ARRAY OF BATTERY LEVEL ICONS
-	const uint32_t BATTLEVEL_ICONS[] = {
-		RESOURCE_ID_IMAGE_BATTEMPTY,	//0
-		RESOURCE_ID_IMAGE_BATT10,		 //1
-		RESOURCE_ID_IMAGE_BATT20,		 //2
-		RESOURCE_ID_IMAGE_BATT30,		 //3
-		RESOURCE_ID_IMAGE_BATT40,		 //4
-		RESOURCE_ID_IMAGE_BATT50,		 //5
-		RESOURCE_ID_IMAGE_BATT60,		 //6
-		RESOURCE_ID_IMAGE_BATT70,		 //7
-		RESOURCE_ID_IMAGE_BATT80,		 //8
-		RESOURCE_ID_IMAGE_BATT90,		 //9
-		RESOURCE_ID_IMAGE_BATTFULL,	 //10
-		RESOURCE_ID_IMAGE_BATTNONE		//11
-	};
-		
-	// INDEX FOR ARRAY OF BATTERY LEVEL ICONS
-	const uint8_t BATTEMPTY_ICON_INDX = 0;
-	const uint8_t BATT10_ICON_INDX = 1;
-	const uint8_t BATT20_ICON_INDX = 2;
-	const uint8_t BATT30_ICON_INDX = 3;
-	const uint8_t BATT40_ICON_INDX = 4;
-	const uint8_t BATT50_ICON_INDX = 5;
-	const uint8_t BATT60_ICON_INDX = 6;
-	const uint8_t BATT70_ICON_INDX = 7;
-	const uint8_t BATT80_ICON_INDX = 8;
-	const uint8_t BATT90_ICON_INDX = 9;
-	const uint8_t BATTFULL_ICON_INDX = 10;
-	const uint8_t BATTNONE_ICON_INDX = 11;
-	
+
 	// VARIABLES
 	// NOTE: buffers have to be static and hardcoded
 	int current_battlevel = 0;
-	static char battlevel_percent[6];
+	static char battlevel_percent[7];
 	
 	// CODE START
 	
 	// initialize inverter layer to hide
-	layer_set_hidden((Layer *)inv_battlevel_layer, true);
+//	layer_set_hidden((Layer *)inv_battlevel_layer, true);
 		
 	//APP_LOG(APP_LOG_LEVEL_DEBUG, "LOAD BATTLEVEL, LAST BATTLEVEL: %s", last_battlevel);
 	
@@ -1783,7 +1737,7 @@ static void load_battlevel() {
 		// Init code or no battery, can't do battery; set text layer & icon to empty value 
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, NO BATTERY");
 		text_layer_set_text(battlevel_layer, "");
-		create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTNONE_ICON_INDX]); 
+		//create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTNONE_ICON_INDX]); 
 		LowBatteryAlert = false;		
 		return;
 	}
@@ -1792,14 +1746,14 @@ static void load_battlevel() {
 		// Zero battery level; set here, so if we get zero later we know we have an error instead
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, SET STRING");
 		text_layer_set_text(battlevel_layer, "0%");
-		layer_set_hidden((Layer *)inv_battlevel_layer, false);
+//		layer_set_hidden((Layer *)inv_battlevel_layer, false);
 		if (!LowBatteryAlert) {
 			//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, VIBRATE");
 			alert_handler_cgm(LOWBATTERY_VIBE);
 			LowBatteryAlert = true;
 		}		
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, ZERO BATTERY, SET ICON");
-		create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTEMPTY_ICON_INDX]);
+		//create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTEMPTY_ICON_INDX]);
 		return;
 	}
 	
@@ -1811,69 +1765,16 @@ static void load_battlevel() {
 		// got a negative or out of bounds or error battery level
 		//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, UNKNOWN, ERROR BATTERY");
 		text_layer_set_text(battlevel_layer, "ERR");
-		layer_set_hidden((Layer *)inv_battlevel_layer, false);
-		create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTNONE_ICON_INDX]);
+//		layer_set_hidden((Layer *)inv_battlevel_layer, false);
+		//create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTNONE_ICON_INDX]);
 		return;
 	}
 			
 		// get current battery level and set battery level text with percent
-		snprintf(battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "%i%%", current_battlevel);
+		snprintf(battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "B:%i%%", current_battlevel);
 		text_layer_set_text(battlevel_layer, battlevel_percent);
 
-		// check battery level, set battery level icon
-		if ( (current_battlevel > 90) && (current_battlevel <= 100) ) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTFULL_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 80) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT90_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 70) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT80_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 60) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT70_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 50) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT60_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 40) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT50_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 30) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT40_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 20) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT30_ICON_INDX]);
-			LowBatteryAlert = false;
-		}
-		else if (current_battlevel > 10) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT20_ICON_INDX]);
-			layer_set_hidden((Layer *)inv_battlevel_layer, false);
-			if (!LowBatteryAlert) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, LOW BATTERY, 20 OR LESS, VIBRATE");
-				alert_handler_cgm(LOWBATTERY_VIBE);
-				LowBatteryAlert = true;
-			}
-		}
-		else if (current_battlevel > 5) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATT10_ICON_INDX]);
-			layer_set_hidden((Layer *)inv_battlevel_layer, false);
-			if (!LowBatteryAlert) {
-				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, LOW BATTERY, 10 OR LESS, VIBRATE");
-				alert_handler_cgm(LOWBATTERY_VIBE);
-				LowBatteryAlert = true;
-			}
-		}
-		else if ( (current_battlevel > 0) && (current_battlevel <= 5) ) {
-			create_update_bitmap(&batticon_bitmap,batticon_layer,BATTLEVEL_ICONS[BATTEMPTY_ICON_INDX]);
-			layer_set_hidden((Layer *)inv_battlevel_layer, false);
+		 if ( (current_battlevel > 0) && (current_battlevel <= 10) ) {
 			if (!LowBatteryAlert) {
 				//APP_LOG(APP_LOG_LEVEL_INFO, "LOAD BATTLEVEL, LOW BATTERY, 5 OR LESS, VIBRATE");
 				alert_handler_cgm(LOWBATTERY_VIBE);
@@ -1938,7 +1839,7 @@ void sync_tuple_changed_callback_cgm(const uint32_t key, const Tuple* new_tuple,
 
 	case CGM_NAME_KEY:
 		//APP_LOG(APP_LOG_LEVEL_INFO, "SYNC TUPLE: T1D NAME");
-		text_layer_set_text(t1dname_layer, new_tuple->value->cstring);
+		//text_layer_set_text(t1dname_layer, new_tuple->value->cstring);
 		break; // break for CGM_NAME_KEY
 	}	// end switch(key)
 
@@ -2089,31 +1990,49 @@ void window_load_cgm(Window *window_cgm) {
 	layer_add_child(window_layer_cgm, text_layer_get_layer(cgmtime_layer));
 
 	// T1D NAME
-	t1dname_layer = text_layer_create(GRect(5, 138, 69, 28));
+/*	t1dname_layer = text_layer_create(GRect(5, 138, 69, 28));
 	text_layer_set_text_color(t1dname_layer, GColorWhite);
 	text_layer_set_background_color(t1dname_layer, GColorClear);
 	text_layer_set_font(t1dname_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
 	text_layer_set_text_alignment(t1dname_layer, GTextAlignmentLeft);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(t1dname_layer));
-
+*/
 	// BATTERY LEVEL ICON
-	batticon_layer = bitmap_layer_create(GRect(80, 147, 28, 20));
+/*	batticon_layer = bitmap_layer_create(GRect(80, 147, 28, 20));
 	bitmap_layer_set_alignment(batticon_layer, GAlignLeft);
 	bitmap_layer_set_background_color(batticon_layer, GColorBlack);
 	layer_add_child(window_layer_cgm, bitmap_layer_get_layer(batticon_layer));
-
+*/
 	// BATTERY LEVEL
-	battlevel_layer = text_layer_create(GRect(110, 144, 38, 20));
+//	battlayer = text_layer_create(GRect(110, 144, 38, 20));
+	battlevel_layer = text_layer_create(GRect(0, 148, 55, 18));
 	text_layer_set_text_color(battlevel_layer, GColorWhite);
 	text_layer_set_background_color(battlevel_layer, GColorBlack);
 	text_layer_set_font(battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	text_layer_set_text_alignment(battlevel_layer, GTextAlignmentLeft);
 	layer_add_child(window_layer_cgm, text_layer_get_layer(battlevel_layer));
-	
-	// INVERTER BATTERY LAYER
-	inv_battlevel_layer = inverter_layer_create(GRect(110, 149, 38, 15));
-	layer_add_child(window_get_root_layer(window_cgm), inverter_layer_get_layer(inv_battlevel_layer));
 
+	// WATCH BATTERY LEVEL
+	BatteryChargeState charge_state=battery_state_service_peek();
+	static char watch_battlevel_percent[7];
+	snprintf(watch_battlevel_percent, BATTLEVEL_FORMATTED_SIZE, "W:%i%%", charge_state.charge_percent);
+	watch_battlevel_layer = text_layer_create(GRect(81, 148, 59, 18));
+	text_layer_set_text(watch_battlevel_layer, watch_battlevel_percent);
+	if(charge_state.is_charging) {
+		text_layer_set_text_color(watch_battlevel_layer, GColorBlack);
+		text_layer_set_background_color(watch_battlevel_layer, GColorWhite);
+	} else {
+		text_layer_set_text_color(watch_battlevel_layer, GColorWhite);
+		text_layer_set_background_color(watch_battlevel_layer, GColorBlack);
+	}	
+	text_layer_set_font(watch_battlevel_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+	text_layer_set_text_alignment(watch_battlevel_layer, GTextAlignmentRight);
+	layer_add_child(window_layer_cgm, text_layer_get_layer(watch_battlevel_layer));
+
+	// INVERTER BATTERY LAYER
+/*	inv_battlevel_layer = inverter_layer_create(GRect(110, 149, 38, 15));
+	layer_add_child(window_get_root_layer(window_cgm), inverter_layer_get_layer(inv_battlevel_layer));
+*/
 	// CURRENT ACTUAL TIME FROM WATCH
 	time_watch_layer = text_layer_create(GRect(0, 82, 144, 44));
 	text_layer_set_text_color(time_watch_layer, GColorWhite);
@@ -2123,10 +2042,11 @@ void window_load_cgm(Window *window_cgm) {
 	layer_add_child(window_layer_cgm, text_layer_get_layer(time_watch_layer));
 	
 	// CURRENT ACTUAL DATE FROM APP
-	date_app_layer = text_layer_create(GRect(0, 120, 144, 25));
+	date_app_layer = text_layer_create(GRect(0, 120, 144, 29));
 	text_layer_set_text_color(date_app_layer, GColorWhite);
 	text_layer_set_background_color(date_app_layer, GColorClear);
 	text_layer_set_font(date_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+	//text_layer_set_font(date_app_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	text_layer_set_text_alignment(date_app_layer, GTextAlignmentCenter);
 	draw_date_from_app();
 	layer_add_child(window_layer_cgm, text_layer_get_layer(date_app_layer));
@@ -2167,26 +2087,27 @@ void window_unload_cgm(Window *window_cgm) {
 	destroy_null_GBitmap(&appicon_bitmap);
 	destroy_null_GBitmap(&cgmicon_bitmap);
 	destroy_null_GBitmap(&specialvalue_bitmap);
-	destroy_null_GBitmap(&batticon_bitmap);
+	//destroy_null_GBitmap(&batticon_bitmap);
 
 	//APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW UNLOAD, DESTROY BITMAPS IF EXIST");	
 	destroy_null_BitmapLayer(&icon_layer);
 	destroy_null_BitmapLayer(&cgmicon_layer);
 	destroy_null_BitmapLayer(&appicon_layer);
-	destroy_null_BitmapLayer(&batticon_layer);
+	//destroy_null_BitmapLayer(&batticon_layer);
 
 	//APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW UNLOAD, DESTROY TEXT LAYERS IF EXIST");	
 	destroy_null_TextLayer(&bg_layer);
 	destroy_null_TextLayer(&cgmtime_layer);
 	destroy_null_TextLayer(&message_layer);
 	destroy_null_TextLayer(&battlevel_layer);
-	destroy_null_TextLayer(&t1dname_layer);
+	destroy_null_TextLayer(&watch_battlevel_layer);
+	//destroy_null_TextLayer(&t1dname_layer);
 	destroy_null_TextLayer(&time_watch_layer);
 	destroy_null_TextLayer(&time_app_layer);
 	destroy_null_TextLayer(&date_app_layer);
 
 	//APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW UNLOAD, DESTROY INVERTER LAYERS IF EXIST");	
-	destroy_null_InverterLayer(&inv_battlevel_layer);
+	//destroy_null_InverterLayer(&inv_battlevel_layer);
 	
 	//APP_LOG(APP_LOG_LEVEL_INFO, "WINDOW UNLOAD OUT");
 } // end window_unload_cgm
@@ -2199,6 +2120,9 @@ static void init_cgm(void) {
 
 	// subscribe to the bluetooth connection service
 	bluetooth_connection_service_subscribe(handle_bluetooth_cgm);
+	
+	//subscribe to the battery handler
+	battery_state_service_subscribe(battery_handler);
 	
 	// init the window pointer to NULL if it needs it
 	if (window_cgm != NULL) {
@@ -2238,6 +2162,8 @@ static void deinit_cgm(void) {
 	// unsubscribe to the bluetooth connection service
 	//APP_LOG(APP_LOG_LEVEL_INFO, "DEINIT, UNSUBSCRIBE BLUETOOTH");
 	bluetooth_connection_service_unsubscribe();
+
+	battery_state_service_unsubscribe();
 	
 	// cancel timers if they exist
 	//APP_LOG(APP_LOG_LEVEL_INFO, "DEINIT, CANCEL APP TIMER");

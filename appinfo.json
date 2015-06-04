@@ -93,58 +93,8 @@
                 "type": "png"
             },
             {
-                "file": "images/battfull.png",
-                "name": "IMAGE_BATTFULL",
-                "type": "png"
-            },
-            {
-                "file": "images/batt90.png",
-                "name": "IMAGE_BATT90",
-                "type": "png"
-            },
-            {
-                "file": "images/batt80.png",
-                "name": "IMAGE_BATT80",
-                "type": "png"
-            },
-            {
-                "file": "images/batt70.png",
-                "name": "IMAGE_BATT70",
-                "type": "png"
-            },
-            {
-                "file": "images/batt60.png",
-                "name": "IMAGE_BATT60",
-                "type": "png"
-            },
-            {
-                "file": "images/batt50.png",
-                "name": "IMAGE_BATT50",
-                "type": "png"
-            },
-            {
-                "file": "images/batt40.png",
-                "name": "IMAGE_BATT40",
-                "type": "png"
-            },
-            {
-                "file": "images/batt30.png",
-                "name": "IMAGE_BATT30",
-                "type": "png"
-            },
-            {
-                "file": "images/batt20.png",
-                "name": "IMAGE_BATT20",
-                "type": "png"
-            },
-            {
                 "file": "images/phoneon.png",
                 "name": "IMAGE_PHONEON",
-                "type": "png"
-            },
-            {
-                "file": "images/batt10.png",
-                "name": "IMAGE_BATT10",
                 "type": "png"
             },
             {
@@ -153,18 +103,8 @@
                 "type": "png"
             },
             {
-                "file": "images/battempty.png",
-                "name": "IMAGE_BATTEMPTY",
-                "type": "png"
-            },
-            {
                 "file": "images/rcvron.png",
                 "name": "IMAGE_RCVRON",
-                "type": "png"
-            },
-            {
-                "file": "images/battnone.png",
-                "name": "IMAGE_BATTNONE",
                 "type": "png"
             },
             {
